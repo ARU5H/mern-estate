@@ -1,30 +1,86 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SignUp() {
+  const [formData, setFormData] = useState({});
+  const [success, setSuccess] = useState(null);
+  const [dots, setDots] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!success) return;
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length < 3 ? prev + "." : ""));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [success]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const res = await fetch("/api/auth/signup", {
+        method: "Post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        setLoading(false);
+        setError(data.message);
+        return;
+      }
+      setLoading(false);
+      setError(null);
+      setSuccess("Registered successfully, now sign in");
+      setTimeout(() => navigate("/sign-in"), 13000);
+    } catch (error) {
+      setLoading(false);
+      setError(error.message);
+    }
+  };
+
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl text-center font-semibold my-7">Sign Up</h1>
-      <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="username"
           className="border border-slate-200 p-3 rounded-lg bg-slate-50"
+          onChange={handleChange}
           id="username"
         />
         <input
           type="email"
           placeholder="email"
           className="border border-slate-200 p-3 rounded-lg bg-slate-50"
+          onChange={handleChange}
           id="email"
         />
         <input
           type="password"
           placeholder="password"
           className="border border-slate-200 p-3 rounded-lg bg-slate-50"
+          onChange={handleChange}
           id="password"
         />
-        <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80">
-          Sign up
+        <button
+          disabled={loading}
+          className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
+        >
+          {loading ? "Loading..." : "Sign up"}
         </button>
       </form>
       <div className="flex gap-2 mt-5">
@@ -33,6 +89,13 @@ export default function SignUp() {
           <span className="text-blue-700">Sign in</span>
         </Link>
       </div>
+      {error && <p className="text-red-500 mt-5">{error}</p>}
+      {success && (
+        <p className="text-green-500 mt-5">
+          {success}
+          {dots}
+        </p>
+      )}
     </div>
   );
 }
