@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "@firebase/auth";
 import { app } from "../firebase";
 import { useDispatch } from "react-redux";
@@ -5,9 +6,19 @@ import { signInSuccess } from "../redux/user/userSlice";
 import { useNavigate } from "react-router-dom";
 
 export default function OAuth() {
+  const [success, setSuccess] = useState(null);
+  const [dots, setDots] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
+  useEffect(() => {
+    if (!success) return;
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length < 3 ? prev + "." : ""));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [success]);
+
   const handleGoogleClick = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -26,8 +37,8 @@ export default function OAuth() {
       });
       const data = await res.json();
       dispatch(signInSuccess(data));
-      setTimeout(() => navigate("/"), 13000);
-
+      setSuccess("Registered successfully, now sign in");
+      setTimeout(() => navigate("/"), 3000);
     } catch (error) {}
   };
 

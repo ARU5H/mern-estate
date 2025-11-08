@@ -49,7 +49,7 @@ export default function SignIn() {
       }
       dispatch(signInSuccess(data));
       setSuccess("Registered successfully, now sign in");
-      setTimeout(() => navigate("/"), 13000);
+      setTimeout(() => navigate("/"), 3000);
     } catch (error) {
       dispatch(signInFailure(error.message));
     }
